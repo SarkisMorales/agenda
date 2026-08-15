@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Agenda de Proyectos</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='14' font-size='14'>📓</text></svg>">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">📓</span>
+      <div>
+        <h1>Agenda de Proyectos</h1>
+        <p class="brand-sub" id="resumen">Sin proyectos todavía</p>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <button type="button" id="btn-tema" class="btn ghost" title="Cambiar tema">🌗 Tema</button>
+      <button type="button" id="btn-exportar" class="btn ghost">Exportar</button>
+      <button type="button" id="btn-importar" class="btn ghost">Importar</button>
+      <input type="file" id="input-importar" accept="application/json" hidden>
+      <button type="button" id="btn-nuevo" class="btn primary">+ Nuevo proyecto</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="panel filtros">
+      <label class="campo">
+        <span>Buscar</span>
+        <input type="search" id="buscar" placeholder="nombre, nota o etiqueta…">
+      </label>
+      <label class="campo">
+        <span>Estado</span>
+        <select id="filtro-estado">
+          <option value="">Todos</option>
+          <option value="idea">Idea</option>
+          <option value="en-curso">En curso</option>
+          <option value="pausado">Pausado</option>
+          <option value="terminado">Terminado</option>
+        </select>
+      </label>
+      <label class="campo">
+        <span>Orden</span>
+        <select id="orden">
+          <option value="actualizado">Última edición</option>
+          <option value="prioridad">Prioridad</option>
+          <option value="fecha">Fecha límite</option>
+          <option value="nombre">Nombre</option>
+        </select>
+      </label>
+      <div class="contadores" id="contadores"></div>
+    </section>
+
+    <section id="lista" class="lista" aria-live="polite"></section>
+  </main>
+
+  <template id="tpl-proyecto">
+    <article class="proyecto">
+      <div class="proyecto-cabecera">
+        <div>
+          <h2 class="proyecto-nombre"></h2>
+          <p class="proyecto-desc"></p>
+        </div>
+        <div class="proyecto-badges">
+          <span class="badge estado"></span>
+          <span class="badge prioridad"></span>
+        </div>
+      </div>
+
+      <div class="proyecto-meta">
+        <span class="meta-fecha"></span>
+        <span class="meta-progreso"></span>
+      </div>
+      <div class="barra"><div class="barra-relleno"></div></div>
+
+      <ul class="etiquetas"></ul>
+
+      <ul class="tareas"></ul>
+
+      <form class="nueva-tarea">
+        <input type="text" name="texto" placeholder="Agregar paso o nota…" maxlength="200" required>
+        <button type="submit" class="btn small">Agregar</button>
+      </form>
+
+      <div class="proyecto-acciones">
+        <button type="button" class="btn small ghost" data-accion="editar">Editar</button>
+        <button type="button" class="btn small ghost" data-accion="duplicar">Duplicar</button>
+        <button type="button" class="btn small peligro" data-accion="borrar">Borrar</button>
+      </div>
+    </article>
+  </template>
+
+  <dialog id="dialogo">
+    <form method="dialog" id="form-proyecto">
+      <h2 id="dialogo-titulo">Nuevo proyecto</h2>
+
+      <label class="campo">
+        <span>Nombre *</span>
+        <input type="text" name="nombre" maxlength="80" required>
+      </label>
+
+      <label class="campo">
+        <span>Descripción</span>
+        <textarea name="descripcion" rows="3" maxlength="500"></textarea>
+      </label>
+
+      <div class="fila">
+        <label class="campo">
+          <span>Estado</span>
+          <select name="estado">
+            <option value="idea">Idea</option>
+            <option value="en-curso">En curso</option>
+            <option value="pausado">Pausado</option>
+            <option value="terminado">Terminado</option>
+          </select>
+        </label>
+        <label class="campo">
+          <span>Prioridad</span>
+          <select name="prioridad">
+            <option value="alta">Alta</option>
+            <option value="media" selected>Media</option>
+            <option value="baja">Baja</option>
+          </select>
+        </label>
+        <label class="campo">
+          <span>Fecha límite</span>
+          <input type="date" name="fecha">
+        </label>
+      </div>
+
+      <label class="campo">
+        <span>Etiquetas (separadas por coma)</span>
+        <input type="text" name="etiquetas" placeholder="web, cliente, personal">
+      </label>
+
+      <div class="dialogo-acciones">
+        <button type="submit" value="cancelar" class="btn ghost">Cancelar</button>
+        <button type="submit" value="guardar" class="btn primary">Guardar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>
