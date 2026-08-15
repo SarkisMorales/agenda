@@ -1,0 +1,31 @@
+{
+  "name": "agenda-proyectos",
+  "version": "2.0.0",
+  "description": "Agenda de proyectos con embudo y límite de WIP",
+  "main": "index.js",
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SarkisMorales/agenda.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/SarkisMorales/agenda/issues"
+  },
+  "homepage": "https://github.com/SarkisMorales/agenda#readme",
+  "dependencies": {
+    "dexie": "^4.4.5"
+  },
+  "devDependencies": {
+    "@types/node": "^26.2.0",
+    "fake-indexeddb": "^6.2.5",
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.10"
+  },
+  "type": "module"
+}

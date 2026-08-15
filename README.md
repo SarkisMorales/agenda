@@ -1,47 +1,77 @@
-# 📓 Agenda de Proyectos
+# Agenda de Proyectos v2 — embudo con límite de WIP
 
-Agenda personal para anotar y seguir tus proyectos. Es una página web de un solo
-archivo abierto: no necesita servidor, ni instalación, ni cuenta. Todo se guarda
-en el navegador (`localStorage`).
+App para **cerrar proyectos antes de abrir nuevos**. No es una lista de ideas:
+es un embudo con reglas que la app hace cumplir.
 
-## Cómo usarla
+Estado: **fase 1 completa** — modelo de datos, reglas de negocio y persistencia,
+con tests. Las pantallas vienen en la fase 2.
 
-Abrí `index.html` con doble clic en tu navegador. Listo.
+La v1 (la lista simple con localStorage) quedó en la carpeta [`v1/`](v1/).
 
-Si preferís servirla localmente:
+## Cómo correr los tests
 
 ```bash
-python3 -m http.server 8000
-# luego abrí http://localhost:8000
+npm install
+npm test        # 24 tests sobre las reglas de negocio
+npm run typecheck
 ```
 
-## Qué podés hacer
+## Cómo está organizado
 
-- **Anotar proyectos** con nombre, descripción, estado (Idea / En curso /
-  Pausado / Terminado), prioridad, fecha límite y etiquetas.
-- **Agregar pasos o notas** dentro de cada proyecto y tildarlos; la barra de
-  progreso se actualiza sola.
-- **Buscar** por nombre, nota o etiqueta, y filtrar por estado.
-- **Ordenar** por última edición, prioridad, fecha límite o nombre.
-- **Ver de un vistazo** cuántos proyectos tenés, cuántos en curso, terminados y
-  cuáles pasaron su fecha límite (se marcan en rojo).
-- **Duplicar** un proyecto para reusarlo como plantilla.
-- **Exportar / importar** todo a un archivo JSON, para hacer copia de seguridad o
-  llevarlo a otra computadora.
-- **Tema claro y oscuro** (arranca según la preferencia de tu sistema).
-
-Atajo: `Ctrl/Cmd + N` abre el formulario de proyecto nuevo.
-
-## Dónde quedan los datos
-
-En el `localStorage` del navegador, bajo la clave `agenda-proyectos-v1`. Eso
-significa que los datos son de ese navegador y esa computadora: si borrás los
-datos de navegación, se van. Usá **Exportar** cada tanto para tener un respaldo.
-
-## Archivos
-
-| Archivo | Qué hace |
+| Carpeta | Qué hay |
 | --- | --- |
-| `index.html` | Estructura de la página y plantillas |
-| `styles.css` | Estilos, incluido el tema oscuro |
-| `app.js` | Toda la lógica: guardado, filtros, render |
+| `src/dominio/` | Las reglas puras: tipos, score, estados, estancamiento, métricas. No sabe nada de bases de datos ni de pantallas. |
+| `src/datos/` | Dexie (IndexedDB): el esquema, el repositorio que escribe, export/import. |
+| `src/pruebas/` | Los tests, corriendo contra el Dexie real sobre una IndexedDB en memoria. |
+
+La separación importa por una razón práctica: las reglas se pueden probar y
+cambiar sin tocar la interfaz, y la interfaz no puede saltearse una regla
+porque no es ella quien las decide.
+
+## Las reglas, y dónde vive cada una
+
+| Regla | Dónde |
+| --- | --- |
+| Máx. 3 activos (configurable) | `maquinaEstados.ts` → `validarTransicion` |
+| Próxima acción obligatoria al activar | idem |
+| Descartar exige motivo (10+ caracteres) | idem |
+| Terminar exige aprendizaje (10+ caracteres) | idem |
+| Qué transición de estado es válida | `maquinaEstados.ts` → `TRANSICIONES` |
+| Estancado a los 10 / 21 días | `tiempo.ts` → `calcularEstancamiento` |
+| `score = ((impacto × confianza) / esfuerzo) × 4` | `score.ts` |
+| Nada se borra: se descarta y se revive | `repositorio.ts` → `cambiarEstado` |
+
+## Tres decisiones que cambian el spec
+
+**1. Los eventos viven en su propia tabla, no adentro del proyecto.**
+El spec los ponía como campo del proyecto (`Proyecto.eventos`) y a la vez pedía
+que "si borro un proyecto, los eventos quedan igual en el log global". Las dos
+cosas juntas no se pueden: si el historial es una propiedad del proyecto, borrar
+el proyecto se lo lleva puesto. Ahora `eventos` es una tabla aparte con
+`proyectoId` adentro, y el borrado real no la toca. Hay un test que lo verifica.
+
+**2. Los eventos de cambio de estado guardan `desde` y `hasta` como datos.**
+El spec sólo tenía un `detalle` de texto. Para calcular la tasa de descarte
+habría que leer ese texto y adivinar, y cualquier cambio de redacción rompería
+las métricas históricas para siempre. Ahora el estado va como dato aparte.
+
+**3. No todo evento cuenta contra el estancamiento.**
+Si cualquier modificación reseteara el reloj, renombrar un proyecto lo haría
+verse "vivo" sin haber avanzado nada — es decir, te dejaría hacerte trampa solo.
+Sólo cuentan cambio de estado, pasos agregados o completados, próxima acción
+definida y cierres. Editar el título o las etiquetas no. Hay un test para esto.
+
+## Formato del respaldo
+
+El export incluye proyectos, eventos y ajustes. El import es por merge:
+
+- **Proyectos**: se cruzan por `id`; gana el que tenga `actualizadoEn` más
+  reciente. Importar un backup viejo no pisa trabajo nuevo.
+- **Eventos**: unión por `id`. Como el log nunca se edita, dos eventos con el
+  mismo id son el mismo evento — importar dos veces no duplica nada.
+- **Ajustes**: sólo se toman si localmente no hay nada configurado.
+
+## Pendiente (fase 2)
+
+Pantallas (Hoy, Captura, Bandeja, Todos, Revisión semanal, Cementerio,
+Métricas), atajos de teclado, PWA offline e identidad visual.
